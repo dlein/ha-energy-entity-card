@@ -24,13 +24,15 @@ class HaDateRangeService {
   // Give up if not found.
   TIMEOUT = 10000;
   listeners = [];
+  currentCollection;
   pollStartAt;
 
   connection;
   
-  constructor(hass) {
+  constructor(hass, collectionKey) {
     // Store ref to HASS
     this.hass = hass;
+    this.collectionKey = collectionKey;
     this.pollStartAt = Date.now();
 
     // Get collection, once we have it subscribe to listen for date changes.
@@ -42,6 +44,7 @@ class HaDateRangeService {
   // Once connected, subscribe to date range changes
   onConnect(energyCollection) {
     this.connection = energyCollection.subscribe(collection => { 
+        this.currentCollection = collection;
         this.listeners.forEach(function(callback) { 
           callback(collection); 
         }); 
@@ -52,16 +55,15 @@ class HaDateRangeService {
   getEnergyDataCollectionPoll(complete)
   {
       let energyCollection = null;
-      // Has HA inited collection?
-      if (this.hass.connection['_energy']) {
-        energyCollection = this.hass.connection['_energy'];
-      } else {
-        // v2026.4 introduced a new key name - try that
-        const panelKey = "_energy_" + this.hass.panelUrl;
-        if (this.hass.connection[panelKey]) {
-          energyCollection = this.hass.connection[panelKey];
-        }
-      }
+      const collectionKeys = this.collectionKey
+        ? ["_" + this.collectionKey]
+        : [
+            ...(this.hass.panelUrl ? ["_energy_" + this.hass.panelUrl] : []),
+            "_energy",
+          ];
+      energyCollection = collectionKeys
+        .map((key) => this.hass.connection[key])
+        .find((collection) => collection && typeof collection.subscribe === "function");
       
       if (energyCollection) {
         complete(energyCollection);
@@ -75,6 +77,9 @@ class HaDateRangeService {
   // Register listener
   onDateRangeChange(method) {
     this.listeners.push(method);
+    if (this.currentCollection) {
+      method(this.currentCollection);
+    }
   }
 
   disconnect() {
@@ -94,6 +99,8 @@ class EnergyEntityCardConfig {
   name;
   /** @type {String} */
   units;
+  /** @type {String} */
+  collectionKey;
 
   constructor(config) {
     this.name = config.name ?? '';
@@ -105,6 +112,7 @@ class EnergyEntityCardConfig {
 
     this.entityId = config.entity;
     this.units = config.units;
+    this.collectionKey = config.collection_key;
   }
 }
 
@@ -145,7 +153,7 @@ class HaEnergyEntityCard extends LitElement {
     this.units = this.cardConfig.units ?? this.hass.states[this.cardConfig.entityId]?.attributes?.unit_of_measurement ?? '';
 
     // Connect to date range
-    this.dateRange = new HaDateRangeService(this.hass);
+    this.dateRange = new HaDateRangeService(this.hass, this.cardConfig.collectionKey);
     this.dateRange.onDateRangeChange((c) => {
       this.loadData(c.start, c.end);
     });

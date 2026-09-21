@@ -20,6 +20,21 @@ entity: sensor.grid_energy_used
 unit: 'kWh'
 ```
 
+If the `energy-date-selection` card uses a custom collection, use the same
+`collection_key` on this card. Custom collection keys must start with
+`energy_` in Home Assistant.
+
+```
+type: energy-date-selection
+collection_key: energy_my_dashboard
+
+type: custom:energy-entity-card
+name: Energy used
+entity: sensor.grid_energy_used
+units: kWh
+collection_key: energy_my_dashboard
+```
+
 ## Installation
 
 #### HACS

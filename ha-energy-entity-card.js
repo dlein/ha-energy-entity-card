@@ -94,6 +94,8 @@ class EnergyEntityCardConfig {
   name;
   /** @type {String} */
   units;
+  /** @type {String} */
+  icon;
 
   constructor(config) {
     this.name = config.name ?? '';
@@ -105,6 +107,7 @@ class EnergyEntityCardConfig {
 
     this.entityId = config.entity;
     this.units = config.units;
+    this.icon = config.icon;
   }
 }
 
@@ -188,8 +191,13 @@ class HaEnergyEntityCard extends LitElement {
     return html`
       <ha-card @click=${this.onClick}>
         <div class="container">
-          <span class="heading">${this.cardConfig.name}</span>
-          <span class="value">${this.value} ${this.units}</span>
+          ${this.cardConfig.icon
+            ? html`<ha-icon class="icon" .icon=${this.cardConfig.icon}></ha-icon>`
+            : ''}
+          <div class="content">
+            <span class="heading">${this.cardConfig.name}</span>
+            <span class="value">${this.value} ${this.units}</span>
+          </div>
         </div>
       </ha-card>
     `;
@@ -240,10 +248,21 @@ class HaEnergyEntityCard extends LitElement {
   static get styles() {
     return css`
       .container {
-        flex-direction: column;
+        align-items: center;
         display: flex;
+        gap: 12px;
         padding: 12px;
         cursor: pointer;
+      }
+      .content {
+        display: flex;
+        flex: 1;
+        flex-direction: column;
+        min-width: 0;
+      }
+      .icon {
+        color: var(--state-icon-color);
+        --mdc-icon-size: 24px;
       }
       .heading {
         font-weight:500;

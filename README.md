@@ -20,6 +20,16 @@ entity: sensor.grid_energy_used
 unit: 'kWh'
 ```
 
+An optional icon can be displayed by setting an MDI icon name:
+
+```
+type: custom:energy-entity-card
+name: Grid import
+entity: sensor.grid_energy_used
+units: kWh
+icon: mdi:transmission-tower-import
+```
+
 ## Installation
 
 #### HACS

@@ -132,7 +132,9 @@ class HaEnergyEntityCard extends LitElement {
   static get properties() {
     return {
       hass: { attribute: false },
-      config: { attribute: false }
+      config: { attribute: false },
+      value: { attribute: false },
+      units: { attribute: false }
     };
   }
 
@@ -148,8 +150,6 @@ class HaEnergyEntityCard extends LitElement {
       return;
     }
 
-    // Default value to current state
-    this.value = this.hass.states[this.cardConfig.entityId].state;
     this.units = this.cardConfig.units ?? this.hass.states[this.cardConfig.entityId]?.attributes?.unit_of_measurement ?? '';
 
     // Connect to date range
@@ -197,7 +197,7 @@ class HaEnergyEntityCard extends LitElement {
       <ha-card @click=${this.onClick}>
         <div class="container">
           <span class="heading">${this.cardConfig.name}</span>
-          <span class="value">${this.value} ${this.units}</span>
+          <span class="value">${this.value ?? '...'} ${this.units}</span>
         </div>
       </ha-card>
     `;
@@ -206,6 +206,7 @@ class HaEnergyEntityCard extends LitElement {
   // Load data for timerange selected
   loadData(start, end) {
     // Based on https://github.com/MindFreeze/ha-sankey-chart/blob/master/src/energy.ts
+    this.value = null;
     const dayDifference = dateDiffInDays(start, end);
     const period = dayDifference > 35 ? "month" : dayDifference > 2 ? "day" : "hour";
 
